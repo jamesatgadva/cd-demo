@@ -58,11 +58,11 @@
         sh '''
           SERVICES=$(docker service ls --filter name=cd-demo --quiet | wc -l)
           if [[ "$SERVICES" -eq 0 ]]; then
-            docker network rm cd-demo || true
-            docker network create --driver overlay --attachable cd-demo
-            docker service create --replicas 3 --network cd-demo --name cd-demo -p 8080:8080 ${DOCKERHUB_USERNAME}/cd-demo:${BUILD_NUMBER}
+            sh "docker network rm cd-demo || true"
+            sh "docker network create --driver overlay --attachable cd-demo"
+            sh "docker service create --replicas 3 --network cd-demo --name cd-demo -p 8080:8080 ${DOCKERHUB_USERNAME}/cd-demo:${BUILD_NUMBER}"
           else
-            docker service update --image ${DOCKERHUB_USERNAME}/cd-demo:${BUILD_NUMBER} cd-demo
+            sh "docker service update --image ${DOCKERHUB_USERNAME}/cd-demo:${BUILD_NUMBER} cd-demo"
           fi
           '''
         // run some final tests in production
@@ -73,7 +73,7 @@
           do
             STATUS=$(docker service inspect --format '{{ .UpdateStatus.State }}' cd-demo)
             if [[ "$STATUS" != "updating" ]]; then
-              docker run --rm -v ${WORKSPACE}:/go/src/cd-demo --network cd-demo -e SERVER=cd-demo golang go test cd-demo -v --run Integration
+              sh "docker run --rm -v ${WORKSPACE}:/go/src/cd-demo --network cd-demo -e SERVER=cd-demo golang go test cd-demo -v --run Integration"
               break
             fi
             sleep 10s
